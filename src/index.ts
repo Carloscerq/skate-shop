@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { clientRouter } from "./routes/clients";
 import { productsRouter } from "./routes/products";
+import { ordersRouter } from "./routes/orders";
 import { Clients } from "./entities/clients";
 import { Orders } from "./entities/orders";
 import { Products } from "./entities/products";
@@ -29,5 +30,6 @@ createConnection({
 });
 
 app.use("/clients", clientRouter);
-app.use("/products", productsRouter)
+app.use("/products", productsRouter);
+app.use("/orders", ordersRouter);
 app.listen(port, () => console.log(`Server running on port ${port}`));

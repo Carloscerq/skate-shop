@@ -13,7 +13,7 @@ export class Orders {
   @PrimaryGeneratedColumn("uuid")
   id: number;
 
-  @Column({ default: true })
+  @Column({ default: false })
   isPaid: boolean;
 
   @ManyToOne(() => Clients, (client) => client.orders)

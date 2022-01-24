@@ -71,7 +71,7 @@ clientRouter.post(
   }
 );
 
-clientRouter.delete("/delete", async (req: Request, res: Response) => {
+clientRouter.delete("/", async (req: Request, res: Response) => {
   const { email } = req.body;
 
   if (!email) {
