@@ -1,18 +1,20 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
-import { Client } from "./clients";
-import { ProductInOrder } from "../dto/ProductInOrder";
+import { Clients } from "./clients";
 
 @Entity()
-export class Order {
+export class Orders {
   @PrimaryGeneratedColumn("uuid")
   id: number;
 
   @Column({ default: true })
   isPaid: boolean;
 
-  @ManyToOne(() => Client, (client) => client.orders)
-  client: Client;
+  @ManyToOne(() => Clients, (client) => client.orders)
+  client: Clients;
 
   @Column()
-  products: ProductInOrder[];
+  productsId: number;
+
+  @Column()
+  amount: number;
 }

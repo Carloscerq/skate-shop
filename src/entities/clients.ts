@@ -1,37 +1,41 @@
-import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, OneToMany } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  BeforeInsert,
+  OneToMany,
+} from "typeorm";
 import { IsEmail, IsNotEmpty, IsInt } from "class-validator";
 import { hash } from "bcrypt";
-import { Order } from "./orders";
+import { Orders } from "./orders";
 
 @Entity()
-export class Client {
-	@PrimaryGeneratedColumn("uuid")
-	id: number;
+export class Clients {
+  @PrimaryGeneratedColumn("uuid")
+  id: number;
 
-	@Column({ unique: true })
-	@IsEmail()
-	email: string;
+  @Column()
+  name: string;
 
-	@Column()
-	@IsNotEmpty()
-	password: string;
+  @Column({ unique: true })
+  @IsEmail()
+  email: string;
 
-	@Column()
-	@IsNotEmpty()
-	address: string;
+  @Column()
+  @IsNotEmpty()
+  password: string;
 
-	@Column({ nullable: true })
-	complement?: string | null;
+  @Column()
+  @IsNotEmpty()
+  address: string;
 
-	@Column()
-	@IsInt()
-	telephone: number;
+  @Column({ nullable: true })
+  complement?: string;
 
-	@OneToMany(() => Order, order => order.client)
-	orders: Order[];
+  @Column()
+  @IsInt()
+  telephone: number;
 
-	@BeforeInsert()
-	async hashData() {
-		this.password = await hash(this.password, 10);
-	}
+  @OneToMany(() => Orders, (order) => order.client)
+  orders: Orders[];
 }
