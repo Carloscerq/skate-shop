@@ -23,7 +23,7 @@ ordersRouter.post(
       .getRepository(Products)
       .findOne({ where: { id: productId } });
 
-    if (product && client) {
+    if (product && client && amount - product.amountInStock > 0) {
       await getConnection()
         .createQueryBuilder()
         .update(Products)
@@ -119,7 +119,10 @@ ordersRouter.get(
 
     const order = await getConnection()
       .getRepository(Orders)
-      .findOne({ where: { id: req.params.orderId }, relations: ["product", "client"] });
+      .findOne({
+        where: { id: req.params.orderId },
+        relations: ["product", "client"],
+      });
 
     if (order) return res.status(200).send({ product: order.product });
 
