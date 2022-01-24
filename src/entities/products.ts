@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from "typeorm";
 import { IsNotEmpty, IsInt } from "class-validator";
 import { Orders } from "./orders";
 
@@ -21,6 +21,6 @@ export class Products {
   @IsInt()
   amountInStock: number;
 
-  @ManyToOne(() => Orders, (order) => order.product)
+  @OneToMany(() => Orders, (order) => order.product)
   orders: Orders;
 }

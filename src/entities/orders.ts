@@ -19,7 +19,7 @@ export class Orders {
   @ManyToOne(() => Clients, (client) => client.orders)
   client: Clients;
 
-  @OneToMany(() => Products, (product) => product.orders)
+  @ManyToOne(() => Products, (product) => product.orders)
   product: Products;
 
   @Column()

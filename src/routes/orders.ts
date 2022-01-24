@@ -24,7 +24,6 @@ ordersRouter.post(
       .findOne({ where: { id: productId } });
 
     if (product && client) {
-      console.log("here");
       await getConnection()
         .createQueryBuilder()
         .update(Products)
@@ -32,11 +31,16 @@ ordersRouter.post(
         .where("id = :id", { id: product.id })
         .execute();
 
-      await getConnection().createQueryBuilder().insert().into(Orders).values({
-        amount,
-        client,
-        product,
-      }).execute();
+      await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(Orders)
+        .values({
+          amount,
+          client,
+          product,
+        })
+        .execute();
 
       return res.status(200).send();
     }
@@ -103,5 +107,22 @@ ordersRouter.get(
     const orders = await getConnection().getRepository(Orders).find();
 
     return res.status(200).send(orders);
+  }
+);
+
+ordersRouter.get(
+  "/products/:orderId",
+  async (req: Request, res: Response): Promise<Response> => {
+    if (!req.params.orderId) {
+      return res.status(400).send();
+    }
+
+    const order = await getConnection()
+      .getRepository(Orders)
+      .findOne({ where: { id: req.params.orderId }, relations: ["product", "client"] });
+
+    if (order) return res.status(200).send({ product: order.product });
+
+    return res.status(400).send();
   }
 );

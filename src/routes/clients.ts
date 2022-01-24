@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import { Clients } from "../entities/clients";
 import { getConnection } from "typeorm";
 import { hash } from "bcrypt";
+import { Orders } from "../entities/orders";
 
 export const clientRouter = Router();
 
@@ -71,27 +72,47 @@ clientRouter.post(
   }
 );
 
-clientRouter.delete("/", async (req: Request, res: Response) => {
-  const { email } = req.body;
+clientRouter.delete(
+  "/",
+  async (req: Request, res: Response): Promise<Response> => {
+    const { email } = req.body;
 
-  if (!email) {
-    res.status(400).send({ error: "missing params" });
+    if (!email) {
+      res.status(400).send({ error: "missing params" });
+    }
+
+    const user = await getConnection()
+      .getRepository(Clients)
+      .findOne({ where: { email } });
+
+    if (user) {
+      await getConnection()
+        .createQueryBuilder()
+        .delete()
+        .from(Clients)
+        .where("id = :id", { id: user.id })
+        .execute();
+
+      return res.status(200).send();
+    }
+
+    return res.status(400).send({ error: "not a valid email" });
   }
+);
 
-  const user = await getConnection()
-    .getRepository(Clients)
-    .findOne({ where: { email } });
+clientRouter.get(
+  "/order/:orderId",
+  async (req: Request, res: Response): Promise<Response> => {
+    if (!req.params.orderId) {
+      return res.status(400).send();
+    }
 
-  if (user) {
-    await getConnection()
-      .createQueryBuilder()
-      .delete()
-      .from(Clients)
-      .where("id = :id", { id: user.id })
-      .execute();
+    const order = await getConnection()
+      .getRepository(Orders)
+      .findOne({ where: { id: req.params.orderId }, relations: ["client"] });
 
-    return res.status(200).send();
+    if (order) return res.status(200).send({ client: order.client });
+
+    return res.status(400).send();
   }
-
-  return res.status(400).send({ error: "not a valid email" });
-});
+);
