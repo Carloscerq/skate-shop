@@ -1,5 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+} from "typeorm";
 import { Clients } from "./clients";
+import { Products } from "./products";
 
 @Entity()
 export class Orders {
@@ -12,8 +19,8 @@ export class Orders {
   @ManyToOne(() => Clients, (client) => client.orders)
   client: Clients;
 
-  @Column()
-  productsId: number;
+  @OneToMany(() => Products, (product) => product.orders)
+  product: Products;
 
   @Column()
   amount: number;
