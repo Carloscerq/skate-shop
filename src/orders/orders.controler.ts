@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
-import { Clients } from "../entities/clients";
-import { Orders } from "../entities/orders";
-import { Products } from "../entities/products";
+import { Clients } from "../clients/clients.entity";
+import { Orders } from "./orders.entity";
+import { Products } from "../products/products.entity";
 import { getConnection } from "typeorm";
 
 export const ordersRouter = Router();

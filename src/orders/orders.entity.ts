@@ -5,8 +5,8 @@ import {
   ManyToOne,
   OneToMany,
 } from "typeorm";
-import { Clients } from "./clients";
-import { Products } from "./products";
+import { Clients } from "../clients/clients.entity";
+import { Products } from "../products/products.entity";
 
 @Entity()
 export class Orders {

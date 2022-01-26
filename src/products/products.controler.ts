@@ -1,5 +1,5 @@
 import { Request, Response, Router } from "express";
-import { Products } from "../entities/products";
+import { Products } from "./products.entity";
 import { getConnection } from "typeorm";
 
 export const productsRouter = Router();

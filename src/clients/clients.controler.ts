@@ -1,8 +1,8 @@
 import { Request, Response, Router } from "express";
-import { Clients } from "../entities/clients";
+import { Clients } from "./clients.entity";
 import { getConnection } from "typeorm";
 import { hash } from "bcrypt";
-import { Orders } from "../entities/orders";
+import { Orders } from "../orders/orders.entity";
 
 export const clientRouter = Router();
 

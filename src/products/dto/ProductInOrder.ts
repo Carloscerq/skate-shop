@@ -1,4 +1,4 @@
-import { Products } from "../entities/products";
+import { Products } from "../products.entity";
 
 export interface ProductInOrder {
   product: Products;

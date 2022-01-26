@@ -2,12 +2,12 @@ import express from "express";
 import { createConnection } from "typeorm";
 import cors from "cors";
 import dotenv from "dotenv";
-import { clientRouter } from "./routes/clients";
-import { productsRouter } from "./routes/products";
-import { ordersRouter } from "./routes/orders";
-import { Clients } from "./entities/clients";
-import { Orders } from "./entities/orders";
-import { Products } from "./entities/products";
+import { clientRouter } from "./clients/clients.controler";
+import { productsRouter } from "./products/products.controler";
+import { ordersRouter } from "./orders/orders.controler";
+import { Clients } from "./clients/clients.entity";
+import { Orders } from "./orders/orders.entity";
+import { Products } from "./products/products.entity";
 
 
 dotenv.config();

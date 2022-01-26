@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from "typeorm";
 import { IsNotEmpty, IsInt } from "class-validator";
-import { Orders } from "./orders";
+import { Orders } from "../orders/orders.entity";
 
 @Entity()
 export class Products {

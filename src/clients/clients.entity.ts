@@ -7,7 +7,7 @@ import {
 } from "typeorm";
 import { IsEmail, IsNotEmpty, IsInt } from "class-validator";
 import { hash } from "bcrypt";
-import { Orders } from "./orders";
+import { Orders } from "../orders/orders.entity";
 
 @Entity()
 export class Clients {
