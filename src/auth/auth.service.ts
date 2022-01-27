@@ -5,21 +5,24 @@ import { compare } from "bcrypt";
 import { Clients as ClientsEntity } from "../clients/clients.entity";
 import { getConnection } from "typeorm";
 import { JwtDecodedRequest } from "./dto/JwtDecodedRequest.dto";
+import { JwtTokens } from "./dto/JwtTokens";
+import { JwtTokenInfo } from "./dto/JwtTokenInfo";
 
 dotEnvConfig();
 
 export class AuthService {
 	secretKey = process.env.SECRET_KEY || "private_key";
-	expireTime = process.env.TOKEN_EXPIRE_TIME || "1h";
+	expireTime = process.env.TOKEN_EXPIRE_TIME || "15m";
+	expireRefreshToken = process.env.REFRESH_TOKEN_EXPIRE_TIME || "1h";
 
-	 private async signJwtToken(
+	private async signJwtToken(
 		data: object | string,
 		expireTime: string | number = this.expireTime
 	): Promise<string | JwtPayload> {
 		return await sign(data, this.secretKey, { expiresIn: expireTime });
 	}
 
-	private async verifyJwtToken(
+	async verifyJwtToken(
 		token: string
 	): Promise<boolean | JwtPayload | string> {
 		try {
@@ -58,16 +61,36 @@ export class AuthService {
 	): Promise<Response | NextFunction | void> {
 		const token = req.headers.authorization;
 
-		if (!token) return res.status(401).send("Unauthorized");
+		if (!token) return res.status(401).send("Missing token");
 
-		const decodedToken = await this.verifyJwtToken(token);
-		
-		if (decodedToken) {
-			req.user = <string | object>decodedToken;
+		const decodedToken = <JwtTokenInfo>await this.verifyJwtToken(token);
+
+		if (decodedToken && decodedToken?.token) {
+			req.user = decodedToken;
 			next();
 			return;
 		}
 
-		return res.status(401).send("Unauthorized");
+		return res.status(401).send("Token expired");
+	}
+
+	async generateJwtToken(data: object, refreshToken = false): Promise<JwtTokens> {
+		const token = await this.signJwtToken({ ...data, token: true });
+
+		if (refreshToken) {
+			const refreshToken = await this.signJwtToken(
+				{ ...data, token: false },
+				this.expireRefreshToken
+			);
+
+			return {
+				token,
+				refreshToken,
+			};
+		}
+
+		return {
+			token,
+		};
 	}
 }
