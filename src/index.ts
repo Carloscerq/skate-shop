@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { clientRouter } from "./clients/clients.controler";
 import { productsRouter } from "./products/products.controler";
 import { ordersRouter } from "./orders/orders.controler";
+import { authRouter } from "./auth/auth.controler";
 import { Clients } from "./clients/clients.entity";
 import { Orders } from "./orders/orders.entity";
 import { Products } from "./products/products.entity";
@@ -32,4 +33,5 @@ createConnection({
 app.use("/clients", clientRouter);
 app.use("/products", productsRouter);
 app.use("/orders", ordersRouter);
+app.use("/auth", authRouter);
 app.listen(port, () => console.log(`Server running on port ${port}`));

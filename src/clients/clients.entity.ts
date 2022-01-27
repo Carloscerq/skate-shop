@@ -2,11 +2,9 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  BeforeInsert,
   OneToMany,
 } from "typeorm";
 import { IsEmail, IsNotEmpty, IsInt } from "class-validator";
-import { hash } from "bcrypt";
 import { Orders } from "../orders/orders.entity";
 
 @Entity()
