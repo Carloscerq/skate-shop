@@ -3,13 +3,16 @@ import { Clients } from "./clients.entity";
 import { getConnection } from "typeorm";
 import { ClientsService } from "./clients.service";
 import { OrdersService } from "../orders/orders.service";
+import { AuthService } from "../auth/auth.service";
 
 export const clientRouter = Router();
 const clientsService = new ClientsService();
 const ordersService = new OrdersService();
+const authService = new AuthService();
 
 clientRouter.get(
 	"/",
+	authService.JwtTokenMiddleware,
 	async (req: Request, res: Response): Promise<Response> => {
 		const users = await getConnection().getRepository(Clients).find();
 
@@ -44,6 +47,7 @@ clientRouter.post(
 
 clientRouter.post(
 	"/update",
+	authService.JwtTokenMiddleware,
 	async (req: Request, res: Response): Promise<Response> => {
 		const { email } = req.body;
 
@@ -61,6 +65,7 @@ clientRouter.post(
 
 clientRouter.delete(
 	"/",
+	authService.JwtTokenMiddleware,
 	async (req: Request, res: Response): Promise<Response> => {
 		const { email } = req.body;
 
@@ -78,6 +83,7 @@ clientRouter.delete(
 
 clientRouter.get(
 	"/order/:orderId",
+	authService.JwtTokenMiddleware,
 	async (req: Request, res: Response): Promise<Response> => {
 		if (!req.params.orderId) {
 			return res.status(400).send();

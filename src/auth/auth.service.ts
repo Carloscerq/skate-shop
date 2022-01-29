@@ -11,22 +11,23 @@ import { JwtTokenInfo } from "./dto/JwtTokenInfo";
 dotEnvConfig();
 
 export class AuthService {
-	secretKey = process.env.SECRET_KEY || "private_key";
-	expireTime = process.env.TOKEN_EXPIRE_TIME || "15m";
-	expireRefreshToken = process.env.REFRESH_TOKEN_EXPIRE_TIME || "1h";
-
 	private async signJwtToken(
 		data: object | string,
-		expireTime: string | number = this.expireTime
+		expireTime: string | number = <string>process.env.TOKEN_EXPIRE_TIME
 	): Promise<string | JwtPayload> {
-		return await sign(data, this.secretKey, { expiresIn: expireTime });
+		return await sign(data, <string>process.env.SECRET_KEY, {
+			expiresIn: expireTime,
+		});
 	}
 
-	async verifyJwtToken(
+	private async verifyJwtToken(
 		token: string
 	): Promise<boolean | JwtPayload | string> {
 		try {
-			const decodedToken = await verify(token, this.secretKey);
+			const decodedToken = await verify(
+				token,
+				<string>process.env.SECRET_KEY
+			);
 			return decodedToken;
 		} catch (err) {
 			return false;
@@ -63,7 +64,16 @@ export class AuthService {
 
 		if (!token) return res.status(401).send("Missing token");
 
-		const decodedToken = <JwtTokenInfo>await this.verifyJwtToken(token);
+		let decodedToken: JwtTokenInfo;
+
+		try {
+			decodedToken = await (<JwtTokenInfo>(
+				verify(token.split(" ")[1], <string>process.env.SECRET_KEY)
+			));
+		} catch (err) {
+			console.log(err);
+			return res.status(400).send("Invalid token");
+		}
 
 		if (decodedToken && decodedToken?.token) {
 			req.user = decodedToken;
@@ -74,13 +84,16 @@ export class AuthService {
 		return res.status(401).send("Token expired");
 	}
 
-	async generateJwtToken(data: object, refreshToken = false): Promise<JwtTokens> {
+	async generateJwtToken(
+		data: object,
+		refreshToken = false
+	): Promise<JwtTokens> {
 		const token = await this.signJwtToken({ ...data, token: true });
 
 		if (refreshToken) {
 			const refreshToken = await this.signJwtToken(
 				{ ...data, token: false },
-				this.expireRefreshToken
+				<string>process.env.REFRESH_TOKEN_EXPIRE_TIME
 			);
 
 			return {

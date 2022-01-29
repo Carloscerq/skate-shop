@@ -2,11 +2,13 @@ import { Request, Response, Router } from "express";
 import { ClientsService } from "../clients/clients.service";
 import { ProductsService } from "../products/products.service";
 import { OrdersService } from "./orders.service";
+import { AuthService } from "../auth/auth.service";
 
 export const ordersRouter = Router();
 const clientService = new ClientsService();
 const productService = new ProductsService();
 const orderService = new OrdersService();
+const authService = new AuthService();
 
 ordersRouter.post(
 	"/",
@@ -35,6 +37,7 @@ ordersRouter.post(
 
 ordersRouter.post(
 	"/paid",
+	authService.JwtTokenMiddleware,
 	async (req: Request, res: Response): Promise<Response> => {
 		const { orderId } = req.body;
 
@@ -54,6 +57,7 @@ ordersRouter.post(
 
 ordersRouter.delete(
 	"/",
+	authService.JwtTokenMiddleware,
 	async (req: Request, res: Response): Promise<Response> => {
 		const { orderId } = req.body;
 
@@ -75,6 +79,7 @@ ordersRouter.delete(
 
 ordersRouter.get(
 	"/",
+	authService.JwtTokenMiddleware,
 	async (req: Request, res: Response): Promise<Response> => {
 		const orders = await orderService.findAll();
 
@@ -84,6 +89,7 @@ ordersRouter.get(
 
 ordersRouter.get(
 	"/products/:orderId",
+	authService.JwtTokenMiddleware,
 	async (req: Request, res: Response): Promise<Response> => {
 		if (!req.params.orderId) {
 			return res.status(400).send();
