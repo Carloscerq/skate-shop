@@ -3,7 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  OneToMany,
 } from "typeorm";
 import { Clients } from "../clients/clients.entity";
 import { Products } from "../products/products.entity";

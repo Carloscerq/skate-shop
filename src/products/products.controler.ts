@@ -1,39 +1,27 @@
 import { Request, Response, Router } from "express";
-import { Products } from "./products.entity";
-import { getConnection } from "typeorm";
+import { ProductsService } from "./products.service";
 
 export const productsRouter = Router();
+const productService = new ProductsService();
 
 productsRouter.post(
-  "/",
-  async (req: Request, res: Response): Promise<Response> => {
-    const { name, price, amountInStock, description } = req.body;
+	"/",
+	async (req: Request, res: Response): Promise<Response> => {
+		const { name, price, amountInStock, description } = req.body;
 
-    if (!name || !price || !amountInStock) {
-      return res.status(400).send({ error: "missing params" });
-    }
+		if (!name || !price || !amountInStock) {
+			return res.status(400).send({ error: "missing params" });
+		}
 
-    await getConnection()
-      .createQueryBuilder()
-      .insert()
-      .into(Products)
-      .values({
-        name,
-        price,
-        amountInStock,
-        description,
-      })
-      .execute();
+		productService.create(name, price, amountInStock, description);
 
-    return res.status(200).send();
-  }
+		return res.status(200).send();
+	}
 );
 
 productsRouter.get(
-  "/",
-  async (req: Request, res: Response): Promise<Response> => {
-    const users = await getConnection().getRepository(Products).find();
-
-    return res.status(200).send(users);
-  }
+	"/",
+	async (req: Request, res: Response): Promise<Response> => {
+		return res.status(200).send(await productService.getAll());
+	}
 );

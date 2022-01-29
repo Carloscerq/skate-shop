@@ -1,131 +1,100 @@
 import { Request, Response, Router } from "express";
-import { Clients } from "../clients/clients.entity";
-import { Orders } from "./orders.entity";
-import { Products } from "../products/products.entity";
-import { getConnection } from "typeorm";
+import { ClientsService } from "../clients/clients.service";
+import { ProductsService } from "../products/products.service";
+import { OrdersService } from "./orders.service";
 
 export const ordersRouter = Router();
+const clientService = new ClientsService();
+const productService = new ProductsService();
+const orderService = new OrdersService();
 
 ordersRouter.post(
-  "/",
-  async (req: Request, res: Response): Promise<Response> => {
-    const { email, productId, amount } = req.body;
+	"/",
+	async (req: Request, res: Response): Promise<Response> => {
+		const { email, productId, amount } = req.body;
 
-    if (!email || !productId || !amount) {
-      return res.status(400).send({ error: "missing param" });
-    }
+		if (!email || !productId || !amount) {
+			return res.status(400).send({ error: "missing param" });
+		}
 
-    const client = await getConnection()
-      .getRepository(Clients)
-      .findOne({ where: { email } });
+		const client = await clientService.findOne(email);
 
-    const product = await getConnection()
-      .getRepository(Products)
-      .findOne({ where: { id: productId } });
+		const product = await productService.findOne(productId);
 
-    if (product && client && amount - product.amountInStock > 0) {
-      await getConnection()
-        .createQueryBuilder()
-        .update(Products)
-        .set({ amountInStock: product?.amountInStock - amount })
-        .where("id = :id", { id: product.id })
-        .execute();
+		if (product && client && amount - product.amountInStock > 0) {
+			await productService.removeFromStock(product, amount);
 
-      await getConnection()
-        .createQueryBuilder()
-        .insert()
-        .into(Orders)
-        .values({
-          amount,
-          client,
-          product,
-        })
-        .execute();
+			await orderService.create(client, amount, product);
 
-      return res.status(200).send();
-    }
+			return res.status(200).send();
+		}
 
-    return res.status(400).send();
-  }
+		return res.status(400).send();
+	}
 );
 
 ordersRouter.post(
-  "/paid",
-  async (req: Request, res: Response): Promise<Response> => {
-    const { orderId } = req.body;
+	"/paid",
+	async (req: Request, res: Response): Promise<Response> => {
+		const { orderId } = req.body;
 
-    if (!orderId) return res.status(400).send({ error: "missing param" });
+		if (!orderId) return res.status(400).send({ error: "missing param" });
 
-    const order = await getConnection()
-      .getRepository(Orders)
-      .findOne({ where: { id: orderId } });
+		const order = await orderService.findOne(orderId);
 
-    if (order) {
-      await getConnection()
-        .createQueryBuilder()
-        .update(Orders)
-        .set({ isPaid: true })
-        .where("id = :id", { id: order.id })
-        .execute();
+		if (order) {
+			await orderService.setOrderPaid(order.id);
 
-      return res.status(200).send();
-    }
+			return res.status(200).send();
+		}
 
-    return res.status(400).send();
-  }
+		return res.status(400).send();
+	}
 );
 
 ordersRouter.delete(
-  "/",
-  async (req: Request, res: Response): Promise<Response> => {
-    const { orderId } = req.body;
+	"/",
+	async (req: Request, res: Response): Promise<Response> => {
+		const { orderId } = req.body;
 
-    if (!orderId) return res.status(400).send({ error: "missing param" });
+		if (!orderId) return res.status(400).send({ error: "missing param" });
 
-    const order = await getConnection()
-      .getRepository(Orders)
-      .findOne({ where: { id: orderId } });
+		const order = await orderService.findOne(orderId);
 
-    if (order) {
-      await getConnection()
-        .createQueryBuilder()
-        .delete()
-        .from(Orders)
-        .where("id = :id", { id: order.id })
-        .execute();
+		if (order) {
+			await productService.addInStock(order.product, order.amount);
 
-      return res.status(200).send();
-    }
+			await orderService.delete(order.id);
 
-    return res.status(400).send();
-  }
+			return res.status(200).send();
+		}
+
+		return res.status(400).send();
+	}
 );
 
 ordersRouter.get(
-  "/",
-  async (req: Request, res: Response): Promise<Response> => {
-    const orders = await getConnection().getRepository(Orders).find();
+	"/",
+	async (req: Request, res: Response): Promise<Response> => {
+		const orders = await orderService.findAll();
 
-    return res.status(200).send(orders);
-  }
+		return res.status(200).send(orders);
+	}
 );
 
 ordersRouter.get(
-  "/products/:orderId",
-  async (req: Request, res: Response): Promise<Response> => {
-    if (!req.params.orderId) {
-      return res.status(400).send();
-    }
+	"/products/:orderId",
+	async (req: Request, res: Response): Promise<Response> => {
+		if (!req.params.orderId) {
+			return res.status(400).send();
+		}
 
-    const order = await getConnection()
-      .getRepository(Orders)
-      .findOne({
-        where: { id: req.params.orderId },
-        relations: ["product", "client"],
-      });
+		const product = await productService.findProductFromOrder(
+			req.params.orderId
+		);
 
-    if (order) return res.status(200).send({ product: order.product });
+		if (product) return res.status(200).send({ product });
 
-    return res.status(400).send();
-  }
+		return res.status(400).send();
+	}
 );

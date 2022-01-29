@@ -1,118 +1,94 @@
 import { Request, Response, Router } from "express";
 import { Clients } from "./clients.entity";
 import { getConnection } from "typeorm";
-import { hash } from "bcrypt";
-import { Orders } from "../orders/orders.entity";
+import { ClientsService } from "./clients.service";
+import { OrdersService } from "../orders/orders.service";
 
 export const clientRouter = Router();
+const clientsService = new ClientsService();
+const ordersService = new OrdersService();
 
 clientRouter.get(
-  "/",
-  async (req: Request, res: Response): Promise<Response> => {
-    const users = await getConnection().getRepository(Clients).find();
+	"/",
+	async (req: Request, res: Response): Promise<Response> => {
+		const users = await getConnection().getRepository(Clients).find();
 
-    return res.status(200).send(users);
-  }
+		return res.status(200).send(users);
+	}
 );
 
 clientRouter.post(
-  "/",
-  async (req: Request, res: Response): Promise<Response> => {
-    const { name, email, password, telephone, address, complement } = req.body;
+	"/",
+	async (req: Request, res: Response): Promise<Response> => {
+		const { name, email, password, telephone, address, complement } =
+			req.body;
 
-    if (!name || !email || !password || !telephone || !address || !complement) {
-      res.status(400).send({ error: "missing params" });
-    }
+		if (
+			!name ||
+			!email ||
+			!password ||
+			!telephone ||
+			!address ||
+			!complement
+		) {
+			res.status(400).send({ error: "missing params" });
+		}
 
-    const hashedPassword = await hash(password, 10);
+		const createdClient = await clientsService.create(req.body);
 
-    await getConnection()
-      .createQueryBuilder()
-      .insert()
-      .into(Clients)
-      .values({
-        name,
-        email,
-        password: hashedPassword,
-        telephone,
-        address,
-        complement,
-      })
-      .execute();
+		if (!createdClient) return res.status(400).send("email already in use");
 
-    return res.status(200).send();
-  }
+		return res.status(200).send();
+	}
 );
 
 clientRouter.post(
-  "/update",
-  async (req: Request, res: Response): Promise<Response> => {
-    const { email } = req.body;
+	"/update",
+	async (req: Request, res: Response): Promise<Response> => {
+		const { email } = req.body;
 
-    if (!email) {
-      res.status(400).send({ error: "missing params" });
-    }
+		if (!email) {
+			res.status(400).send({ error: "missing params" });
+		}
 
-    const user = await getConnection()
-      .getRepository(Clients)
-      .findOne({ where: { email } });
+		const updatedClient = await clientsService.update(email, req.body);
 
-    if (user) {
-      await getConnection()
-        .createQueryBuilder()
-        .update(Clients)
-        .set(req.body)
-        .where("id = :id", { id: user.id })
-        .execute();
+		if (updatedClient) return res.status(200).send();
 
-      return res.status(200).send();
-    }
-
-    return res.status(400).send({ error: "not a valid email" });
-  }
+		return res.status(400).send({ error: "not a valid email" });
+	}
 );
 
 clientRouter.delete(
-  "/",
-  async (req: Request, res: Response): Promise<Response> => {
-    const { email } = req.body;
+	"/",
+	async (req: Request, res: Response): Promise<Response> => {
+		const { email } = req.body;
 
-    if (!email) {
-      res.status(400).send({ error: "missing params" });
-    }
+		if (!email) {
+			res.status(400).send({ error: "missing params" });
+		}
 
-    const user = await getConnection()
-      .getRepository(Clients)
-      .findOne({ where: { email } });
+		const deletedClient = await clientsService.delete(email);
 
-    if (user) {
-      await getConnection()
-        .createQueryBuilder()
-        .delete()
-        .from(Clients)
-        .where("id = :id", { id: user.id })
-        .execute();
+		if (deletedClient) return res.status(200).send();
 
-      return res.status(200).send();
-    }
-
-    return res.status(400).send({ error: "not a valid email" });
-  }
+		return res.status(400).send({ error: "not a valid email" });
+	}
 );
 
 clientRouter.get(
-  "/order/:orderId",
-  async (req: Request, res: Response): Promise<Response> => {
-    if (!req.params.orderId) {
-      return res.status(400).send();
-    }
+	"/order/:orderId",
+	async (req: Request, res: Response): Promise<Response> => {
+		if (!req.params.orderId) {
+			return res.status(400).send();
+		}
 
-    const order = await getConnection()
-      .getRepository(Orders)
-      .findOne({ where: { id: req.params.orderId }, relations: ["client"] });
+		const client = await ordersService.findClientFromOrder(
+			req.params.orderId
+		);
 
-    if (order) return res.status(200).send({ client: order.client });
+		if (client) return res.status(200).send({ client });
 
-    return res.status(400).send();
-  }
+		return res.status(400).send();
+	}
 );
